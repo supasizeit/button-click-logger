@@ -43,7 +43,7 @@
     }).replace(/, /g, ' ');
 
     // Append the new time entry to the existing description
-    const newDescription = `${currentDescription}\n${action}: ${formattedDate}`;
+    let newDescription = `${currentDescription}\n${action}: ${formattedDate}`;
 
     // If this is a clock-out action, calculate the total hours worked
     if (action === 'Clock Out') {
