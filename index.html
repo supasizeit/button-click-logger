@@ -45,24 +45,31 @@
     // Append the new time entry to the existing description
     let newDescription = `${currentDescription}\n${action}: ${formattedDate}`;
 
-    // If this is a clock-out action, calculate the total hours worked
+   // If this is a clock-out action, calculate the hours worked that day
     if (action === 'Clock Out') {
-    const lines = newDescription.split('\n');
-    let totalHoursWorked = 0;
-
-    for (let i = 0; i < lines.length; i += 2) {
-        if (lines[i].startsWith('Clock In') && lines[i + 1] && lines[i + 1].startsWith('Clock Out')) {
-            const clockInTime = parseDate(lines[i].split(': ')[1]);
-            const clockOutTime = parseDate(lines[i + 1].split(': ')[1]);
-            totalHoursWorked += (clockOutTime - clockInTime) / (1000 * 60 * 60);  // Convert milliseconds to hours
+        const lines = newDescription.split('\n');
+        let accumulatedHours = 0;
+        let todayHours = 0;
+    
+        // Get the last clock-in time from the description
+        if (lines[lines.length - 2] && lines[lines.length - 2].startsWith('Clock In')) {
+            const clockInTime = parseDate(lines[lines.length - 2].split(': ')[1]);
+            const clockOutTime = parseDate(lines[lines.length - 1].split(': ')[1]);
+            todayHours = (clockOutTime - clockInTime) / (1000 * 60 * 60);  // Convert milliseconds to hours
+            todayHours = Math.round(todayHours * 2) / 2;  // Round to nearest 0.5 hour
         }
-    }
-
-    const expectedHours = 171;  // Expected hours for October 2023
-    const accumulatedHours = totalHoursWorked - expectedHours;
-
-    // Append the accumulated hours information to the new description
-    newDescription += `\nAccumulated Hours: ${accumulatedHours.toFixed(2)}`;
+    
+        // Get the previous accumulated hours from the description
+        const accumulatedMatch = currentDescription.match(/Accumulated Hours: ([-\d.]+)/);
+        if (accumulatedMatch) {
+            accumulatedHours = parseFloat(accumulatedMatch[1]);
+        }
+    
+        // Update the accumulated hours
+        accumulatedHours += todayHours - 9;  // Subtract 9 hours for the expected workday length
+    
+        // Append the accumulated hours information to the new description
+        newDescription += `\nAccumulated Hours: ${accumulatedHours.toFixed(2)}`;
     }
 
     // Helper function to parse date strings formatted as 'DD/MM/YYYY hh:mm:ss'
