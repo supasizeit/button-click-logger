@@ -77,20 +77,27 @@ if (action === 'Clock Out') {
         accumulatedHours += roundedHours - 9;  // Subtract 9 hours for the expected workday length
     }
 
-    // Append the accumulated hours information to the new description
-    newDescription += `\nAccumulated Hours: ${accumulatedHours.toFixed(2)}`;
-}
-    const [action, dateTime] = line.split(': ');
-if (dateTime) {
-    const date = dateTime.split(' ')[0];
-    const time = parseDate(dateTime);
-    // ... rest of your code
-} else {
-    console.error(`Unexpected format in line: ${line}`);
+  
+
+    // Process each line of the description to find the clock-in and clock-out times
+for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line) {
+        const [action, dateTime] = line.split(': ');
+        if (dateTime) {
+            const date = dateTime.split(' ')[0];
+            const time = parseDate(dateTime);
+            // ... rest of your code
+        } else {
+            console.error(`Unexpected format in line: ${line}`);
+        }
+    } else {
+        console.error('Line is undefined or null');
+    }
 }
 
-    // Helper function to parse date strings formatted as 'DD/MM/YYYY hh:mm:ss'
-    function parseDate(dateString) {
+// Helper function to parse date strings formatted as 'DD/MM/YYYY hh:mm:ss'
+function parseDate(dateString) {
     if (!dateString) {
         console.error('Undefined or null date string');
         return new Date();  // or handle this case as appropriate for your application
@@ -99,7 +106,8 @@ if (dateTime) {
     const [year, time] = yearTime.split(' ');
     const [hour, minute, second] = time.split(':');
     return new Date(year, month - 1, day, hour, minute, second);  // Note: month is 0-indexed
-    }
+}
+
     // Update the task with the new description
     const updateResponse = await fetch(apiUrl, {
         method: 'PUT',
