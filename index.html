@@ -46,31 +46,40 @@
     let newDescription = `${currentDescription}\n${action}: ${formattedDate}`;
 
    // If this is a clock-out action, calculate the hours worked that day
-    if (action === 'Clock Out') {
-        const lines = newDescription.split('\n');
-        let accumulatedHours = 0;
-        let todayHours = 0;
-    
-        // Get the last clock-in time from the description
-        if (lines[lines.length - 2] && lines[lines.length - 2].startsWith('Clock In')) {
-            const clockInTime = parseDate(lines[lines.length - 2].split(': ')[1]);
-            const clockOutTime = parseDate(lines[lines.length - 1].split(': ')[1]);
-            todayHours = (clockOutTime - clockInTime) / (1000 * 60 * 60);  // Convert milliseconds to hours
-            todayHours = Math.round(todayHours * 2) / 2;  // Round to nearest 0.5 hour
+if (action === 'Clock Out') {
+    const lines = newDescription.split('\n');
+    let accumulatedHours = 0;
+    const dailyHours = {};  // Object to store the earliest clock-in and latest clock-out times for each date
+
+    // Process each line of the description to find the clock-in and clock-out times
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const [action, dateTime] = line.split(': ');
+        const date = dateTime.split(' ')[0];
+        const time = parseDate(dateTime);
+
+        // Update the earliest clock-in and latest clock-out times for the date
+        if (!dailyHours[date]) {
+            dailyHours[date] = { clockIn: time, clockOut: time };
+        } else {
+            if (action === 'Clock In' && time < dailyHours[date].clockIn) {
+                dailyHours[date].clockIn = time;
+            } else if (action === 'Clock Out' && time > dailyHours[date].clockOut) {
+                dailyHours[date].clockOut = time;
+            }
         }
-    
-        // Get the previous accumulated hours from the description
-        const accumulatedMatch = currentDescription.match(/Accumulated Hours: ([-\d.]+)/);
-        if (accumulatedMatch) {
-            accumulatedHours = parseFloat(accumulatedMatch[1]);
-        }
-    
-        // Update the accumulated hours
-        accumulatedHours += todayHours - 9;  // Subtract 9 hours for the expected workday length
-    
-        // Append the accumulated hours information to the new description
-        newDescription += `\nAccumulated Hours: ${accumulatedHours.toFixed(2)}`;
     }
+
+    // Calculate the total hours worked and update the accumulated hours
+    for (const date in dailyHours) {
+        const hoursWorked = (dailyHours[date].clockOut - dailyHours[date].clockIn) / (1000 * 60 * 60);
+        const roundedHours = Math.round(hoursWorked * 2) / 2;  // Round to nearest 0.5 hour
+        accumulatedHours += roundedHours - 9;  // Subtract 9 hours for the expected workday length
+    }
+
+    // Append the accumulated hours information to the new description
+    newDescription += `\nAccumulated Hours: ${accumulatedHours.toFixed(2)}`;
+}
 
     // Helper function to parse date strings formatted as 'DD/MM/YYYY hh:mm:ss'
     function parseDate(dateString) {
