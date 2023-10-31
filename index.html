@@ -47,24 +47,31 @@
 
     // If this is a clock-out action, calculate the total hours worked
     if (action === 'Clock Out') {
-        const lines = newDescription.split('\n');
-        let totalHoursWorked = 0;
+    const lines = newDescription.split('\n');
+    let totalHoursWorked = 0;
 
-        for (let i = 0; i < lines.length; i += 2) {
-            if (lines[i].startsWith('Clock In') && lines[i + 1] && lines[i + 1].startsWith('Clock Out')) {
-                const clockInTime = new Date(lines[i].split(': ')[1].replace(' ', 'T'));
-                const clockOutTime = new Date(lines[i + 1].split(': ')[1].replace(' ', 'T'));
-                totalHoursWorked += (clockOutTime - clockInTime) / (1000 * 60 * 60);  // Convert milliseconds to hours
-            }
+    for (let i = 0; i < lines.length; i += 2) {
+        if (lines[i].startsWith('Clock In') && lines[i + 1] && lines[i + 1].startsWith('Clock Out')) {
+            const clockInTime = parseDate(lines[i].split(': ')[1]);
+            const clockOutTime = parseDate(lines[i + 1].split(': ')[1]);
+            totalHoursWorked += (clockOutTime - clockInTime) / (1000 * 60 * 60);  // Convert milliseconds to hours
         }
-
-        const expectedHours = 171;  // Expected hours for October 2023
-        const accumulatedHours = totalHoursWorked - expectedHours;
-
-        // Append the accumulated hours information to the new description
-        newDescription += `\nAccumulated Hours: ${accumulatedHours.toFixed(2)}`;
     }
 
+    const expectedHours = 171;  // Expected hours for October 2023
+    const accumulatedHours = totalHoursWorked - expectedHours;
+
+    // Append the accumulated hours information to the new description
+    newDescription += `\nAccumulated Hours: ${accumulatedHours.toFixed(2)}`;
+    }
+
+    // Helper function to parse date strings formatted as 'DD/MM/YYYY hh:mm:ss'
+    function parseDate(dateString) {
+        const [day, month, yearTime] = dateString.split('/');
+        const [year, time] = yearTime.split(' ');
+        const [hour, minute, second] = time.split(':');
+        return new Date(year, month - 1, day, hour, minute, second);  // Note: month is 0-indexed
+    }
     // Update the task with the new description
     const updateResponse = await fetch(apiUrl, {
         method: 'PUT',
