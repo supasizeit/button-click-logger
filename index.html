@@ -35,6 +35,13 @@
                 alert('Failed to log');
             }
         }
+
+        fetch(...).then(response => {
+    console.log(response);
+    return response.json();
+}).then(data => {
+    console.log(data);
+});
     </script>
 </body>
 </html>
