@@ -17,14 +17,14 @@
 
     // Fetch the current task data
     const response = await fetch(apiUrl, {
-        headers: {
-            'Authorization': 'pk_3841409_T8B1RJC73DOVSSHB5OVY544KBEHARK38',  // Your ClickUp API token
-        },
+      headers: {
+        'Authorization': 'pk_3841409_T8B1RJC73DOVSSHB5OVY544KBEHARK38',  // Your ClickUp API token
+      },
     });
 
     if (!response.ok) {
-        console.error('Error fetching task data:', await response.text());
-        return;
+      console.error('Error fetching task data:', await response.text());
+      return;
     }
 
     const taskData = await response.json();
@@ -33,100 +33,66 @@
     // Format the date and time
     const now = new Date();
     const formattedDate = now.toLocaleString('en-GB', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
     }).replace(/, /g, ' ');
 
     // Append the new time entry to the existing description
     let newDescription = `${currentDescription}\n${action}: ${formattedDate}`;
 
-   // If this is a clock-out action, calculate the hours worked that day
-if (action === 'Clock Out') {
-    const lines = newDescription.split('\n');
-    let accumulatedHours = 0;
-    const dailyHours = {};  // Object to store the earliest clock-in and latest clock-out times for each date
+    // If this is a clock-out action, calculate the hours worked that day
+    if (action === 'Clock Out') {
+      const lines = newDescription.split('\n');
+      let accumulatedHours = 0;
+      const dailyHours = {};  // Object to store the earliest clock-in and latest clock-out times for each date
 
-    // Process each line of the description to find the clock-in and clock-out times
-    for (let i = 0; i < lines.length; i++) {
+      // Process each line of the description to find the clock-in and clock-out times
+      for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        const [action, dateTime] = line.split(': ');
-        const date = dateTime.split(' ')[0];
-        const time = parseDate(dateTime);
-
-        // Update the earliest clock-in and latest clock-out times for the date
-        if (!dailyHours[date]) {
-            dailyHours[date] = { clockIn: time, clockOut: time };
-        } else {
-            if (action === 'Clock In' && time < dailyHours[date].clockIn) {
-                dailyHours[date].clockIn = time;
-            } else if (action === 'Clock Out' && time > dailyHours[date].clockOut) {
-                dailyHours[date].clockOut = time;
-            }
-        }
-    }
-
-    // Calculate the total hours worked and update the accumulated hours
-    for (const date in dailyHours) {
-        const hoursWorked = (dailyHours[date].clockOut - dailyHours[date].clockIn) / (1000 * 60 * 60);
-        const roundedHours = Math.round(hoursWorked * 2) / 2;  // Round to nearest 0.5 hour
-        accumulatedHours += roundedHours - 9;  // Subtract 9 hours for the expected workday length
-    }
-
-  
-
-    // Process each line of the description to find the clock-in and clock-out times
-for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line) {
-        const [action, dateTime] = line.split(': ');
-        if (dateTime) {
+        if (line) {
+          const [action, dateTime] = line.split(': ');
+          if (dateTime) {
             const date = dateTime.split(' ')[0];
             const time = parseDate(dateTime);
-            // ... rest of your code
-        } else {
-            console.error(`Unexpected format in line: ${line}`);
-        }
-    } else {
-        console.error('Line is undefined or null');
-    }
-}
 
-// Helper function to parse date strings formatted as 'DD/MM/YYYY hh:mm:ss'
-function parseDate(dateString) {
-    if (!dateString) {
+            // Update the earliest clock-in and latest clock-out times for the date
+            if (!dailyHours[date]) {
+              dailyHours[date] = { clockIn: time, clockOut: time };
+            } else {
+              if (action === 'Clock In' && time < dailyHours[date].clockIn) {
+                dailyHours[date].clockIn = time;
+              } else if (action === 'Clock Out' && time > dailyHours[date].clockOut) {
+                dailyHours[date].clockOut = time;
+              }
+            }
+          } else {
+            console.error(`Unexpected format in line: ${line}`);
+          }
+        } else {
+          console.error('Line is undefined or null');
+        }
+      }
+      // ... (rest of your code for calculating accumulatedHours)
+    }
+
+    // Helper function to parse date strings formatted as 'DD/MM/YYYY hh:mm:ss'
+    function parseDate(dateString) {
+      if (!dateString) {
         console.error('Undefined or null date string');
         return new Date();  // or handle this case as appropriate for your application
+      }
+      const [day, month, yearTime] = dateString.split('/');
+      const [year, time] = yearTime.split(' ');
+      const [hour, minute, second] = time.split(':');
+      return new Date(year, month - 1, day, hour, minute, second);  // Note: month is 0-indexed
     }
-    const [day, month, yearTime] = dateString.split('/');
-    const [year, time] = yearTime.split(' ');
-    const [hour, minute, second] = time.split(':');
-    return new Date(year, month - 1, day, hour, minute, second);  // Note: month is 0-indexed
-}
-
-    // Update the task with the new description
-    const updateResponse = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'pk_3841409_T8B1RJC73DOVSSHB5OVY544KBEHARK38',  // Your ClickUp API token
-        },
-        body: JSON.stringify({
-            description: newDescription,
-        }),
-    });
-
-    if (updateResponse.ok) {
-        const data = await updateResponse.json();
-        console.log('Task updated successfully:', data);
-    } else {
-        console.error('Error updating task:', await updateResponse.text());
-    }
-}
+    // ... (rest of your code for updating the task)
+  }
 </script>
 
 </body>
