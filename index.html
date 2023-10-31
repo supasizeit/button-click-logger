@@ -1,47 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Button Click Logger</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clock In/Out Updater</title>
 </head>
 <body>
-    <input type="text" id="name" placeholder="Enter your name">
-    <button onclick="logClick()">Click</button>
 
-    <script>
-        async function logClick() {
-            const name = document.getElementById('name').value;
-            if (!localStorage.getItem('name')) {
-                localStorage.setItem('name', name);
-            }
-            const response = await fetch('https://api.github.com/repos/supasizeit/button-click-logger/dispatches', {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'token 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',
-                    'Accept': 'application/vnd.github.everest-preview+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    event_type: 'log-click',
-                    client_payload: {
-                        name: localStorage.getItem('name')
-                    }
-                })
-            });
+<button onclick="updateTime('Clock In')">Clock In</button>
+<button onclick="updateTime('Clock Out')">Clock Out</button>
 
-            console.log(response);  // Log the response object to the console
-            response.json().then(data => {
-                console.log(data);  // Log the response body as JSON to the console
-            });
+<script>
+  async function updateTime(action) {
+    const taskId = '860rydqew';  // Your task ID
+    const description = `${action}: ${new Date().toISOString()}`;
+    
+    const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'pk_3841409_T8B1RJC73DOVSSHB5OVY544KBEHARK38',  // Your ClickUp API token
+      },
+      body: JSON.stringify({
+        description: description,  // This will replace the existing description
+      }),
+    });
 
-            if (response.ok) {
-                alert('Logged successfully');
-            } else {
-                alert('Failed to log');
-            }
-        }
-      
-    </script>
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Task updated successfully:', data);
+    } else {
+      console.error('Error:', await response.text());
+    }
+  }
+</script>
+
 </body>
 </html>
