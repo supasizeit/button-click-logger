@@ -1,0 +1,25 @@
+name: Log Click
+
+on:
+  repository_dispatch:
+    types: [log-click]
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Log click
+      run: |
+        echo "Name: ${{ github.event.client_payload.name }}, Timestamp: $(date +'%Y%m%d%S')" >> log.txt
+
+    - name: Commit and push
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add log.txt
+        git commit -m "Log click"
+        git push
