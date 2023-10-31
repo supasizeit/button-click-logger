@@ -91,8 +91,26 @@
       const [hour, minute, second] = time.split(':');
       return new Date(year, month - 1, day, hour, minute, second);  // Note: month is 0-indexed
     }
-    // ... (rest of your code for updating the task)
-  }
+
+    // Update the task with the new description
+    const updateResponse = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'pk_3841409_T8B1RJC73DOVSSHB5OVY544KBEHARK38',  // Your ClickUp API token
+        },
+        body: JSON.stringify({
+            description: newDescription,
+        }),
+    });
+
+    if (updateResponse.ok) {
+        const data = await updateResponse.json();
+        console.log('Task updated successfully:', data);
+    } else {
+        console.error('Error updating task:', await updateResponse.text());
+    }
+}
 </script>
 
 </body>
